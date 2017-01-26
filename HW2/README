@@ -1,0 +1,2 @@
+main.c is a single file program that generates a dungeon with 11 randomly placed rooms of 7 x 5 size. Each room is also connected to another room via a path.
+No arguements are required to generate a dungeon.
