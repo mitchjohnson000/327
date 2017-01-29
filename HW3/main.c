@@ -1,11 +1,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <string.h>
 
 char board[105][160];
 int checkIfValid(int x,int y);
 void printBoard();
 void connectRooms();
+void loadDungeon();
+void saveDungeon();
 struct room
 {
 	int x;
@@ -15,6 +18,30 @@ struct room rooms[11];
 
 
 int main(int argc, char *argv[]){
+	char * load = "--load";
+	char * save = "--save";
+
+	if(argc>=3){
+		char * switch_one = argv[1];
+		char * switch_two = argv[2];
+		if(strcmp(switch_one,load)==0||strcmp(switch_two,load)==0){
+			loadDungeon();
+		}
+		if(strcmp(switch_one,save)==0||strcmp(switch_two,save)==0){
+			saveDungeon();
+			}
+	}
+
+	if(argc==2){
+		char * switch_one = argv[1];
+		if(strcmp(switch_one,load)==0){
+			loadDungeon();
+		}
+		if(strcmp(switch_one,save)==0){
+			saveDungeon();
+		}
+	}
+
 	srand(time(NULL));
 
 	int i,j,z;
@@ -29,7 +56,6 @@ int main(int argc, char *argv[]){
 		int randY = rand() % 98 + 1;
 		rooms[i].x = randX;
 		rooms[i].y = randY;
-		printf("%d\n",randX);
 		while(checkIfValid(randX,randY) == 1){
 			randX = rand() % 151 + 1;
 			randY = rand() % 98 + 1;	
@@ -44,7 +70,7 @@ int main(int argc, char *argv[]){
 		}		
 	}
 	connectRooms();
-	printBoard();
+	//printBoard();
 
 return 0;
 }
@@ -101,3 +127,24 @@ void connectRooms(){
 		}
 	}
 }
+
+void loadDungeon(){
+	printf("%s\n","load");
+
+}
+
+void saveDungeon(){
+	char * home = getenv("HOME");
+	char *path = strcat(home,"/.rlg327/dungeon.txt");
+	printf("%s\n", path);
+	FILE * file = fopen(path,"w");
+	if(file==NULL){
+		printf("%s\n","File is NULL");
+	}
+	char * filetype = "RLG327-S2017";
+	//fwrite(filetype,sizeof(char),12,file);
+	int version = 0;
+	fwrite(&version,sizeof version,1,file); 
+	//fprintf(file, "%s %s %s %d", "We", "are", "in", 2012);
+	fclose(file);
+	}
