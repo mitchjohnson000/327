@@ -183,6 +183,11 @@ void saveDungeon(){
 	fwrite(&version,sizeof version,1,file); 
 	fwrite(&size,sizeof size,1,file);
 	fwrite(&array_hardness,sizeof array_hardness,1,file);
+	int i;
+	for(i=0;i<numOfRooms;i++){
+		
+		fwrite
+	}
 	fseek(file, SEEK_SET, 0);
 	fread(filetype_buffer,strlen(filetype),1,file);
 	fread(version_buffer,sizeof version,1,file);
