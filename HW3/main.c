@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <time.h>
 #include <string.h>
+#include <stdint.h>
 
 char board[105][160];
 unsigned char array_hardness[16800];
@@ -18,6 +19,7 @@ struct room
 	int y;
 };
 struct room rooms[11];
+int numOfRooms = 11;
 
 
 int main(int argc, char *argv[]){
@@ -151,7 +153,32 @@ void connectRooms(){
 }
 
 void loadDungeon(){
-	printf("%s\n","load");
+	char * home = getenv("HOME");
+	char *path = strcat(home,"/.rlg327/dungeon.bin");
+	FILE * file;
+	char *filetype_buffer = malloc(12);
+	unsigned char buffer_hardness[16800];
+	unsigned int * version_buffer = malloc(sizeof(unsigned int));
+	unsigned int * size_buffer = malloc(sizeof(unsigned int));
+	int i;
+
+	file = fopen(path,"r");
+	if(file==NULL) printf("%s\n","File is NULL");
+	fread(filetype_buffer,12,1,file);
+	fread(version_buffer,4,1,file);
+	fread(size_buffer,4,1,file);
+	fread(buffer_hardness,16800,1,file);
+
+	printf("%s\n",filetype_buffer);
+	printf("%d\n",*version_buffer);
+	printf("%d\n",*size_buffer);
+
+	for(i=0;i<numOfRooms*4;i++){
+		uint8_t * jaldskfj = malloc(sizeof(uint8_t));
+		fread(jaldskfj,sizeof(uint8_t),1,file);
+		printf("%hhu\n",*jaldskfj);
+		free(jaldskfj);
+	}
 
 }
 
@@ -163,38 +190,25 @@ void saveDungeon(){
 	FILE * file;
 	int version = 0;
 	unsigned int size = 16820 + (11 * 4);
-	int numOfRooms = 11;
-	char *filetype_buffer = malloc(strlen(filetype));
-	unsigned char buffer_hardness[16800];
-	unsigned int * version_buffer = malloc(sizeof(unsigned int));
-	unsigned int * size_buffer = malloc(sizeof(unsigned int));
-	int z;
-	for(z=0;z<16800;z++){
-		printf("%u\n",array_hardness[z]);
-	}
-
+	int z,i;
 
 	printf("%s\n", path);
 	file = fopen(path,"w+");
-	if(file==NULL){
-		printf("%s\n","File is NULL");
-	}
+	if(file==NULL) printf("%s\n","File is NULL");
 	fwrite(filetype,strlen(filetype),1,file);
 	fwrite(&version,sizeof version,1,file); 
 	fwrite(&size,sizeof size,1,file);
 	fwrite(&array_hardness,sizeof array_hardness,1,file);
-	int i;
+
 	for(i=0;i<numOfRooms;i++){
-		
-		fwrite
-	}
-	fseek(file, SEEK_SET, 0);
-	fread(filetype_buffer,strlen(filetype),1,file);
-	fread(version_buffer,sizeof version,1,file);
-	fread(size_buffer,sizeof size,1,file);
-	fread(buffer_hardness,sizeof array_hardness,1,file);
-
-	//printf("%s\n",buffer_hardness);
-
+		uint8_t x = rooms[i].x;
+		uint8_t y = rooms[i].y;
+		uint8_t w = 7;
+		uint8_t h = 5;
+		fwrite(&x,sizeof(uint8_t),1,file);
+		fwrite(&y,sizeof(uint8_t),1,file);
+		fwrite(&w,sizeof(uint8_t),1,file);
+		fwrite(&h,sizeof(uint8_t),1,file);
+	}	
 	fclose(file);
-	}
+}
