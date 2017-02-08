@@ -32,7 +32,9 @@ typedef enum dim {
   num_dims
 } dim_t;
 
+//priority queue globals
 typedef int16_t pair_t[num_dims];
+int itemCount = 0;
 
 #define DUNGEON_X              160
 #define DUNGEON_Y              105
@@ -46,6 +48,8 @@ typedef int16_t pair_t[num_dims];
 #define DUNGEON_SAVE_FILE      "dungeon"
 #define DUNGEON_SAVE_SEMANTIC  "RLG327-S2017"
 #define DUNGEON_SAVE_VERSION   0U
+#define INFINITY               -1
+#define UNDEFINED              -2
   
 #define mappair(pair) (d->map[pair[dim_y]][pair[dim_x]])
 #define mapxy(x, y) (d->map[y][x])
@@ -67,6 +71,13 @@ typedef struct room {
   pair_t size;
 } room_t;
 
+struct block {
+  int x;
+  int y;
+  int distance;
+  int visited;
+};
+
 typedef struct pc{
 	pair_t position;
 
@@ -86,6 +97,7 @@ typedef struct dungeon {
    * of overhead to the memory system.                                    */
   uint8_t hardness[DUNGEON_Y][DUNGEON_X];
   pc_t pc;
+  uint32_t distance[DUNGEON_Y][DUNGEON_X];
 } dungeon_t;
 
 static uint32_t in_room(dungeon_t *d, int16_t y, int16_t x)
@@ -1078,6 +1090,73 @@ int read_pgm(dungeon_t *d, char *pgm)
   return 0;
 }
 
+void calculateDistance(){
+  int source_x = d->pc.position[dim_x];
+  int source_y = d->pc.position[dim_y];
+  int i,j;
+  block queue[16800];
+
+  for(i=0;i<16800;i++){
+    queue[i].visited = 0;
+  }
+
+
+  //set every distance to infinity
+  for(i=0;i<DUNGEON_X;i++){
+    for(j=0<DUNGEON_Y;j++){
+      if(!(i == source_x && j == source_y)){
+          d->distance[j][i] = INFINITY;
+      } 
+    }
+  }
+
+  block source;
+  source.x = source_x;
+  source.y = source_y;
+  source.distance = 0;
+  source.visited = 1;
+
+  insert(source,queue);
+
+  while(!(isEmpty())){
+    block bl = peek(queue);
+    removeData();
+
+    int startPosX = (bl.x - 1 < 0) ? bl.x : b1.x-1;
+    int startPosY = (bl.y - 1 < 0) ? bl.y : bl.y-1;
+    int endPosX =   (bl.x + 1 > 159) ? bl.x : bl.x+1;
+    int endPosY =   (bl.y + 1 > 104) ? bl.y : bl.y+1;
+
+
+    // See how many are alive
+    for (int rowNum=startPosX; rowNum<=endPosX; rowNum++) {
+        for (int colNum=startPosY; colNum<=endPosY; colNum++) {
+          // All the neighbors will be grid[rowNum][colNum]
+
+          int alt = distance[bl.y][bl.x] + weightForHardness(colNum,rowNum);
+          if(alt < distance[rowNum][colNum]){
+            if(queue[])
+
+          }
+
+    }
+}
+}
+}
+
+void calculateDistanceNonTunnel(){
+
+}
+
+int weightForHardness(int x, int y){
+  if(d->hardness[y][x] == 0) return 0;
+  if(d->hardness[y][x] < 85 && d->hardness[y][x] > 0) return 1;
+  if(d->hardness[y][x] > 84 && d->hardness[y][x] < 171) return 2;
+  if(d->hardness[y][x] > 171 && d->hardness[y][x] < 255) return 3;
+
+  return -1
+  
+}
 void usage(char *name)
 {
   fprintf(stderr,
@@ -1234,4 +1313,52 @@ int main(int argc, char *argv[])
   delete_dungeon(&d);
 
   return 0;
+}
+
+//Priority Queue Implementation
+
+block peek(block blockArray[]){
+   return blockArray[itemCount - 1].distance;
+}
+
+int isEmpty(){
+   return itemCount == 0;
+}
+
+int isFull(){
+   return itemCount == 16800;
+}
+
+int size(){
+   return itemCount;
+}  
+
+void insert(block data,block blockArray[]){
+   int i = 0;
+
+   if(!isFull()){
+      // if queue is empty, insert the data 
+      if(itemCount == 0){
+         blockArray[itemCount++] = data;        
+      }else{
+         // start from the right end of the queue 
+      
+         for(i = itemCount - 1; i >= 0; i-- ){
+            // if data is larger, shift existing item to right end 
+            if(data.distance > intArray[i].distance){
+               intArray[i+1] = intArray[i];
+            }else{
+               break;
+            }            
+         }  
+      
+         // insert the data 
+         intArray[i+1] = data;
+         itemCount++;
+      }
+   }
+}
+
+int removeData(){
+   return intArray[--itemCount]; 
 }
