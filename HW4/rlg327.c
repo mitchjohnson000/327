@@ -32,9 +32,10 @@ typedef enum dim {
   num_dims
 } dim_t;
 
+
+
 //priority queue globals
 typedef int16_t pair_t[num_dims];
-int itemCount = 0;
 
 #define DUNGEON_X              160
 #define DUNGEON_Y              105
@@ -48,7 +49,7 @@ int itemCount = 0;
 #define DUNGEON_SAVE_FILE      "dungeon"
 #define DUNGEON_SAVE_SEMANTIC  "RLG327-S2017"
 #define DUNGEON_SAVE_VERSION   0U
-#define INFINITY               -1
+#define INFINITY               100000
 #define UNDEFINED              -2
   
 #define mappair(pair) (d->map[pair[dim_y]][pair[dim_x]])
@@ -66,17 +67,21 @@ typedef enum __attribute__ ((__packed__)) terrain_type {
   ter_pc,
 } terrain_type_t;
 
-typedef struct room {
-  pair_t position;
-  pair_t size;
-} room_t;
-
 struct block {
   int x;
   int y;
   int distance;
   int visited;
+  int weight;
+  terrain_type_t type;
 };
+
+typedef struct room {
+  pair_t position;
+  pair_t size;
+} room_t;
+
+
 
 typedef struct pc{
 	pair_t position;
@@ -1090,73 +1095,194 @@ int read_pgm(dungeon_t *d, char *pgm)
   return 0;
 }
 
-void calculateDistance(){
-  int source_x = d->pc.position[dim_x];
-  int source_y = d->pc.position[dim_y];
+int weightForHardness(int x, int y, dungeon_t * d){
+  if(d->hardness[y][x] < 85 && d->hardness[y][x] >= 0) return 1;
+  if(d->hardness[y][x] > 84 && d->hardness[y][x] < 171) return 2;
+  if(d->hardness[y][x] > 171 && d->hardness[y][x] < 255) return 3;
+
+  return INFINITY;
+  
+}
+
+struct block extractMin(struct block queue[105][160],int *count){
+	int i,j;
+	int minimum = INFINITY; 
+	struct block temp;
+	for(i = 0;i<DUNGEON_Y;i++){
+		for(j = 0; j<DUNGEON_X;j++){
+			if(queue[i][j].visited != 1 && queue[i][j].distance < minimum){
+				minimum = queue[i][j].distance;
+				temp = queue[i][j];
+			}
+		}
+	}
+	(*count)--;
+	temp.visited = 1;
+	queue[temp.y][temp.x] = temp;
+	return temp;
+}
+
+struct block extractMinNonTunnel(struct block queue[105][160],int *count){
+	int i,j;
+	int minimum = INFINITY; 
+	struct block temp;
+	for(i = 0;i<DUNGEON_Y;i++){
+		for(j = 0; j<DUNGEON_X;j++){
+			if(queue[i][j].visited != 1 && queue[i][j].distance < minimum && queue[i][j].type != ter_wall_immutable && queue[i][j].type != ter_wall){
+				minimum = queue[i][j].distance;
+				temp = queue[i][j];
+			}
+		}
+	}
+	(*count)--;
+	temp.visited = 1;
+	queue[temp.y][temp.x] = temp;
+	return temp;
+}
+
+void calculateDistance(dungeon_t *d){
   int i,j;
-  block queue[16800];
+  struct block queue[105][160];
+  int *count = malloc(sizeof(int));
+  int firstRun = 0;
+  *count = 16800;
 
-  for(i=0;i<16800;i++){
-    queue[i].visited = 0;
+
+  for(i=0;i<DUNGEON_Y;i++){
+  	for(j = 0;j<DUNGEON_X;j++){
+  		queue[i][j].x = j;
+  		queue[i][j].y = i;
+  		queue[i][j].distance = INFINITY;
+  		queue[i][j].weight = weightForHardness(j,i,d);
+  		queue[i][j].visited = 0;
+  	}
   }
 
+  while(*count != 0){
+  	struct block bl;
+  	if(firstRun == 0){
+  		bl = queue[d->pc.position[dim_y]][d->pc.position[dim_x]];
+  		bl.distance = 0;
+  		bl.visited = 1;
+  		queue[d->pc.position[dim_y]][d->pc.position[dim_x]] = bl;
+  	}else{
+  		bl = extractMin(queue,count);
+  	}
+    firstRun = 1;
 
-  //set every distance to infinity
-  for(i=0;i<DUNGEON_X;i++){
-    for(j=0<DUNGEON_Y;j++){
-      if(!(i == source_x && j == source_y)){
-          d->distance[j][i] = INFINITY;
-      } 
-    }
-  }
-
-  block source;
-  source.x = source_x;
-  source.y = source_y;
-  source.distance = 0;
-  source.visited = 1;
-
-  insert(source,queue);
-
-  while(!(isEmpty())){
-    block bl = peek(queue);
-    removeData();
-
-    int startPosX = (bl.x - 1 < 0) ? bl.x : b1.x-1;
+    int startPosX = (bl.x - 1 < 0) ? bl.x : bl.x-1;
     int startPosY = (bl.y - 1 < 0) ? bl.y : bl.y-1;
     int endPosX =   (bl.x + 1 > 159) ? bl.x : bl.x+1;
     int endPosY =   (bl.y + 1 > 104) ? bl.y : bl.y+1;
 
 
     // See how many are alive
-    for (int rowNum=startPosX; rowNum<=endPosX; rowNum++) {
-        for (int colNum=startPosY; colNum<=endPosY; colNum++) {
+    int rowNum,colNum;
+    for (rowNum=startPosX; rowNum<=endPosX; rowNum++) {
+        for (colNum=startPosY; colNum<=endPosY; colNum++) {
           // All the neighbors will be grid[rowNum][colNum]
-
-          int alt = distance[bl.y][bl.x] + weightForHardness(colNum,rowNum);
-          if(alt < distance[rowNum][colNum]){
-            if(queue[])
-
+          struct block u = queue[colNum][rowNum];
+          if(u.visited == 0){
+          	if(u.weight == INFINITY){
+          		u.visited = 1;
+          		u.distance = bl.distance + bl.weight;
+          		(*count) --;
+          	}else{
+          		int alt = bl.distance + bl.weight;
+          		if(alt < u.distance|| u.distance == INFINITY){
+          			u.distance = alt;
+          		}
+          	}
           }
-
-    }
+          queue[colNum][rowNum] = u;
+   		}
+	}
 }
+for(i = 1;i<DUNGEON_Y-1;i++){
+	printf("\n");
+	for(j = 1;j<DUNGEON_X-1;j++){
+		printf("%d",(queue[i][j].distance % 10));
+	}
 }
+printf("\n");
+printf("\n");
+free(count);
 }
 
-void calculateDistanceNonTunnel(){
+void calculateDistanceNonTunnel(dungeon_t *d){
+	 int i,j;
+  struct block queue[105][160];
+  int *count = malloc(sizeof(int));
+  int firstRun = 0;
+  *count = 16800;
 
+
+  for(i=0;i<DUNGEON_Y;i++){
+  	for(j = 0;j<DUNGEON_X;j++){
+  		queue[i][j].x = j;
+  		queue[i][j].y = i;
+  		queue[i][j].distance = INFINITY;
+  		queue[i][j].weight = weightForHardness(j,i,d);
+  		queue[i][j].visited = 0;
+  		queue[i][j].type = d->map[i][j];
+  	}
+  }
+
+  while(*count != 0){
+  	struct block bl;
+  	if(firstRun == 0){
+  		bl = queue[d->pc.position[dim_y]][d->pc.position[dim_x]];
+  		bl.distance = 0;
+  		bl.visited = 1;
+  		queue[d->pc.position[dim_y]][d->pc.position[dim_x]] = bl;
+  	}else{
+  		bl = extractMinNonTunnel(queue,count);
+  	}
+    firstRun = 1;
+
+    int startPosX = (bl.x - 1 < 0) ? bl.x : bl.x-1;
+    int startPosY = (bl.y - 1 < 0) ? bl.y : bl.y-1;
+    int endPosX =   (bl.x + 1 > 159) ? bl.x : bl.x+1;
+    int endPosY =   (bl.y + 1 > 104) ? bl.y : bl.y+1;
+
+
+    // See how many are alive
+    int rowNum,colNum;
+    for (rowNum=startPosX; rowNum<=endPosX; rowNum++) {
+        for (colNum=startPosY; colNum<=endPosY; colNum++) {
+          // All the neighbors will be grid[rowNum][colNum]
+          struct block u = queue[colNum][rowNum];
+          if(u.visited == 0){
+          	if(u.weight == INFINITY||u.type == ter_wall_immutable||u.type == ter_wall){
+          		u.visited = 1;
+          		u.distance = bl.distance + bl.weight;
+          		(*count) --;
+          	}else{
+          		int alt = bl.distance + bl.weight;
+          		if(alt < u.distance|| u.distance == INFINITY){
+          			u.distance = alt;
+          		}
+          	}
+          }
+          queue[colNum][rowNum] = u;
+   		}
+	}
+}
+for(i = 1;i<DUNGEON_Y-1;i++){
+	printf("\n");
+	for(j = 1;j<DUNGEON_X-1;j++){
+		if(queue[i][j].type == ter_wall ||queue[i][j].type == ter_wall_immutable){
+			printf("%c",' ');
+		}else{
+			printf("%d",(queue[i][j].distance % 10));
+		}
+	}
+}
+printf("\n");
+printf("\n");
+free(count);
 }
 
-int weightForHardness(int x, int y){
-  if(d->hardness[y][x] == 0) return 0;
-  if(d->hardness[y][x] < 85 && d->hardness[y][x] > 0) return 1;
-  if(d->hardness[y][x] > 84 && d->hardness[y][x] < 171) return 2;
-  if(d->hardness[y][x] > 171 && d->hardness[y][x] < 255) return 3;
-
-  return -1
-  
-}
 void usage(char *name)
 {
   fprintf(stderr,
@@ -1301,6 +1427,8 @@ int main(int argc, char *argv[])
 
   if(do_pc){
   	add_pc(&d);
+  	calculateDistance(&d);
+  	calculateDistanceNonTunnel(&d);
   }
 
   render_dungeon(&d);
@@ -1317,48 +1445,3 @@ int main(int argc, char *argv[])
 
 //Priority Queue Implementation
 
-block peek(block blockArray[]){
-   return blockArray[itemCount - 1].distance;
-}
-
-int isEmpty(){
-   return itemCount == 0;
-}
-
-int isFull(){
-   return itemCount == 16800;
-}
-
-int size(){
-   return itemCount;
-}  
-
-void insert(block data,block blockArray[]){
-   int i = 0;
-
-   if(!isFull()){
-      // if queue is empty, insert the data 
-      if(itemCount == 0){
-         blockArray[itemCount++] = data;        
-      }else{
-         // start from the right end of the queue 
-      
-         for(i = itemCount - 1; i >= 0; i-- ){
-            // if data is larger, shift existing item to right end 
-            if(data.distance > intArray[i].distance){
-               intArray[i+1] = intArray[i];
-            }else{
-               break;
-            }            
-         }  
-      
-         // insert the data 
-         intArray[i+1] = data;
-         itemCount++;
-      }
-   }
-}
-
-int removeData(){
-   return intArray[--itemCount]; 
-}
