@@ -1,0 +1,1 @@
+The dungeon game now generates a PC. Use the switch --pc followed by the y and x coordinate. It will print out the distances of the tunnlers and non-tunnelers from the PC.

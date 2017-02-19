@@ -655,12 +655,7 @@ static int place_rooms(dungeon_t *d)
   return 0;
 }
 
-static int add_pc(dungeon_t *d,int random){
-	if(random){
-		d->pc.position[dim_y] = d->rooms[0].position[dim_y];
-		d->pc.position[dim_x] = d->rooms[0].position[dim_x];
-	}
-
+static int add_pc(dungeon_t *d){
 	d->map[d->pc.position[dim_y]][d->pc.position[dim_x]] = ter_pc;
 	return 0;
 }
@@ -1439,11 +1434,7 @@ int main(int argc, char *argv[])
   }
 
   if(do_pc){
-  	add_pc(&d,0);
-  	calculateDistance(&d);
-  	calculateDistanceNonTunnel(&d);
-  }else{
-  	add_pc(&d,1);
+  	add_pc(&d);
   	calculateDistance(&d);
   	calculateDistanceNonTunnel(&d);
   }

@@ -75,6 +75,15 @@ struct block {
   int weight;
   terrain_type_t type;
 };
+typedef struct event {
+	int characteristic;
+	int lastSeenX;
+	int lastSeenY;
+	int currentPosX;
+	int currentPosY;
+	int speed;
+	int tick;
+}event_t;
 
 typedef struct room {
   pair_t position;
@@ -102,6 +111,7 @@ typedef struct dungeon {
    * of overhead to the memory system.                                    */
   uint8_t hardness[DUNGEON_Y][DUNGEON_X];
   pc_t pc;
+  int nummon;
   uint32_t distance[DUNGEON_Y][DUNGEON_X];
 } dungeon_t;
 
@@ -1100,6 +1110,10 @@ int read_pgm(dungeon_t *d, char *pgm)
   return 0;
 }
 
+void generateCharacteristics(struct event events[]){
+
+}
+
 int weightForHardness(int x, int y, dungeon_t * d){
   if(d->hardness[y][x] < 85 && d->hardness[y][x] >= 0) return 1;
   if(d->hardness[y][x] > 84 && d->hardness[y][x] < 171) return 2;
@@ -1312,7 +1326,7 @@ int main(int argc, char *argv[])
   time_t seed;
   struct timeval tv;
   uint32_t i;
-  uint32_t do_load, do_save, do_seed, do_image, do_pc;
+  uint32_t do_load, do_save, do_seed, do_image, do_pc,do_nummon;
   uint32_t long_arg;
   char *save_file;
   char *load_file;
@@ -1395,9 +1409,7 @@ int main(int argc, char *argv[])
         case 'p':
           if ((!long_arg && argv[i][2])            ||
               (long_arg && strcmp(argv[i], "-pc")) ||
-              argc <= i + 2                        ||
-              argv[i + 1][0] == '-'                ||
-              argv[i + 2][0] == '-') {
+              argc <= i + 2){
             usage(argv[0]);
           }
           do_pc = 1;
@@ -1408,7 +1420,20 @@ int main(int argc, char *argv[])
             fprintf(stderr, "Invalid PC position.\n");
             usage(argv[0]);
           }
-          break;
+          break;    
+        case 'n':
+          if ((!long_arg && argv[i][2]) ||
+              (long_arg && strcmp(argv[i], "-nummon")) || argc <= i + 1) {
+              usage(argv[0]);
+          }
+          do_nummon = 1;
+          if(atoi(argv[++i]) > 0){
+          	d.nummon = atoi(argv[i]);
+          }else{
+          	usage(argv[0]);
+          }
+        break;
+        
         default:
           usage(argv[0]);
         }
@@ -1449,7 +1474,12 @@ int main(int argc, char *argv[])
   }
 
   render_dungeon(&d);
+  if(do_nummon){
+  	struct event events[d.nummon];
+  	generateCharacteristics(events);
 
+
+  }
 
   if (do_save) {
     write_dungeon(&d, save_file);
