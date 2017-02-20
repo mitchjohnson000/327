@@ -82,6 +82,7 @@ typedef struct event {
 	int currentPosX;
 	int currentPosY;
 	int speed;
+  int sequence;
 	int tick;
 }event_t;
 
@@ -1110,7 +1111,30 @@ int read_pgm(dungeon_t *d, char *pgm)
   return 0;
 }
 
-void generateCharacteristics(struct event events[]){
+void generateCharacteristics(struct event events[],dungeon_t *d){
+  int i;
+  srand(time(NULL));
+    for(i = 0;i < d->nummon;i++){
+       int intel = rand() % 2;
+       int telepath = rand() % 2;
+       int tunnel = rand() % 2;
+       int erratic = rand() % 2;
+       struct event event_t;
+
+       if(intel){
+         event_t.characteristic |= 1 << 0; 
+       }
+       if(telepath){
+         event_t.characteristic |= 1 << 1;
+       }
+       if(tunnel){
+        event_t.characteristic |= 1 << 2;
+
+       }
+       if(erratic){
+         event_t.characteristic |= 1 << 3;
+       }  
+    }
 
 }
 
