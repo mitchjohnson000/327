@@ -2,6 +2,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 #include <endian.h>
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -51,6 +52,10 @@ typedef int16_t pair_t[num_dims];
 #define DUNGEON_SAVE_VERSION   0U
 #define INFINITY               100000
 #define UNDEFINED              -2
+#define BIT_SET(a,b) ((a) |= (1<<(b)))
+#define BIT_CLEAR(a,b) ((a) &= ~(1<<(b)))
+#define BIT_FLIP(a,b) ((a) ^= (1<<(b)))
+#define BIT_CHECK(a,b) ((a) & (1<<(b)))
   
 #define mappair(pair) (d->map[pair[dim_y]][pair[dim_x]])
 #define mapxy(x, y) (d->map[y][x])
@@ -75,16 +80,7 @@ struct block {
   int weight;
   terrain_type_t type;
 };
-typedef struct event {
-	int characteristic;
-	int lastSeenX;
-	int lastSeenY;
-	int currentPosX;
-	int currentPosY;
-	int speed;
-  int sequence;
-	int tick;
-}event_t;
+
 
 typedef struct room {
   pair_t position;
@@ -114,7 +110,22 @@ typedef struct dungeon {
   pc_t pc;
   int nummon;
   uint32_t distance[DUNGEON_Y][DUNGEON_X];
+  int eventMap[DUNGEON_Y][DUNGEON_X];
 } dungeon_t;
+
+typedef struct event {
+	int characteristic;
+	int lastSeenX;
+	int lastSeenY;
+	int currentPosX;
+	int currentPosY;
+	int speed;
+    int sequence;
+    int isPC;
+    int nextTurn;
+    void (*movePtr)(dungeon_t *,struct event *,int);
+
+}event_t;
 
 static uint32_t in_room(dungeon_t *d, int16_t y, int16_t x)
 {
@@ -1111,33 +1122,6 @@ int read_pgm(dungeon_t *d, char *pgm)
   return 0;
 }
 
-void generateCharacteristics(struct event events[],dungeon_t *d){
-  int i;
-  srand(time(NULL));
-    for(i = 0;i < d->nummon;i++){
-       int intel = rand() % 2;
-       int telepath = rand() % 2;
-       int tunnel = rand() % 2;
-       int erratic = rand() % 2;
-       struct event event_t;
-
-       if(intel){
-         event_t.characteristic |= 1 << 0; 
-       }
-       if(telepath){
-         event_t.characteristic |= 1 << 1;
-       }
-       if(tunnel){
-        event_t.characteristic |= 1 << 2;
-
-       }
-       if(erratic){
-         event_t.characteristic |= 1 << 3;
-       }  
-    }
-
-}
-
 int weightForHardness(int x, int y, dungeon_t * d){
   if(d->hardness[y][x] < 85 && d->hardness[y][x] >= 0) return 1;
   if(d->hardness[y][x] > 84 && d->hardness[y][x] < 171) return 2;
@@ -1243,18 +1227,18 @@ void calculateDistance(dungeon_t *d){
    		}
 	}
 }
-for(i = 1;i<DUNGEON_Y-1;i++){
-	printf("\n");
-	for(j = 1;j<DUNGEON_X-1;j++){
-		if(queue[i][j].type == ter_pc){
-			printf("%c",'@');
-		}else{
-			printf("%d",(queue[i][j].distance % 10));
-		}
-	}
-}
-printf("\n");
-printf("\n");
+// for(i = 1;i<DUNGEON_Y-1;i++){
+// 	printf("\n");
+// 	for(j = 1;j<DUNGEON_X-1;j++){
+// 		if(queue[i][j].type == ter_pc){
+// 			printf("%c",'@');
+// 		}else{
+// 			printf("%d",(queue[i][j].distance % 10));
+// 		}
+// 	}
+// }
+// printf("\n");
+// printf("\n");
 free(count);
 }
 
@@ -1317,21 +1301,307 @@ void calculateDistanceNonTunnel(dungeon_t *d){
    		}
 	}
 }
-for(i = 1;i<DUNGEON_Y-1;i++){
-	printf("\n");
-	for(j = 1;j<DUNGEON_X-1;j++){
-		if(queue[i][j].type == ter_wall ||queue[i][j].type == ter_wall_immutable){
-			printf("%c",' ');
-		}else if(queue[i][j].type == ter_pc){
-			printf("%c",'@');
-		}else{
-			printf("%d",(queue[i][j].distance % 10));
+// for(i = 1;i<DUNGEON_Y-1;i++){
+// 	printf("\n");
+// 	for(j = 1;j<DUNGEON_X-1;j++){
+// 		if(queue[i][j].type == ter_wall ||queue[i][j].type == ter_wall_immutable){
+// 			printf("%c",' ');
+// 		}else if(queue[i][j].type == ter_pc){
+// 			printf("%c",'@');
+// 		}else{
+// 			printf("%d",(queue[i][j].distance % 10));
+// 		}
+// 	}
+// }
+// printf("\n");
+// printf("\n");
+free(count);
+}
+int inSameRoom(dungeon_t *d,struct event NPC, struct event PC){
+	int x = NPC.currentPosX;
+	int y = NPC.currentPosY;
+	int i;
+	for(i = 0;i<d->num_rooms;i++){
+		struct room currRoom = d->rooms[i];
+		if((x > currRoom.position[dim_x] && x < currRoom.position[dim_x] + currRoom.size[dim_x]) && (y > currRoom.position[dim_y] && y < currRoom.position[dim_y] + currRoom.size[dim_y])){
+			//the NPC is in currRoom
+			if((x > currRoom.position[dim_x] && x < currRoom.position[dim_x] + currRoom.size[dim_x]) && (y > currRoom.position[dim_y] && y < currRoom.position[dim_y] + currRoom.size[dim_y])){
+				
+			}
+
 		}
 	}
 }
-printf("\n");
-printf("\n");
-free(count);
+int getNextEvent(dungeon_t * d,struct event events[],int tick){
+	int i,j;
+	int min = 10000;
+	int mintick = 100000;
+	int foundNext = 0;
+	struct event temp;
+	for(i = 0;i < d->nummon + 1;i++){
+		struct event currEvent = events[i];
+		if(tick >= currEvent.nextTurn){
+			temp = currEvent;
+			if(min > currEvent.sequence && mintick > currEvent.nextTurn){
+				temp = currEvent;
+				min = currEvent.sequence;
+				mintick = currEvent.nextTurn;
+				foundNext = 1;
+				j = i;
+			}
+		}
+	}
+	if(foundNext){
+		temp.nextTurn = temp.nextTurn + (1000/temp.speed);
+		events[j] = temp;
+		return j;
+	}else{
+		return -1;
+	}
+
+}
+
+void moveNothing(dungeon_t *d,struct event queue[],int nextEventIndex){
+	printf("%s\n", "Called Nothing");
+
+}
+
+
+void movePC(dungeon_t *d,struct event queue[],int nextEventIndex){
+	//keep in same spot for now
+	render_dungeon(d);
+	calculateDistance(d);
+	calculateDistanceNonTunnel(d);
+
+}
+
+void moveIntel(dungeon_t *d,struct event queue[],int nextEventIndex){
+
+	
+}
+
+void moveTele(dungeon_t *d,struct event queue[],int nextEventIndex){
+	
+}
+
+void moveIntelTele(dungeon_t *d,struct event queue[],int nextEventIndex){
+	
+}
+
+void moveTunnel(dungeon_t *d,struct event queue[],int nextEventIndex){
+	
+}
+
+void moveIntelTunnel(dungeon_t *d,struct event queue[],int nextEventIndex){
+	
+}
+
+void moveTeleTunnel(dungeon_t *d,struct event queue[],int nextEventIndex){
+	
+}
+
+void moveIntelTeleTunnel(dungeon_t *d,struct event queue[],int nextEventIndex){
+	
+}
+
+void moveErratic(dungeon_t *d,struct event queue[],int nextEventIndex){
+	
+}
+
+void moveIntelErratic(dungeon_t *d,struct event queue[],int nextEventIndex){
+	
+}
+
+void moveTeleErratic(dungeon_t *d,struct event queue[],int nextEventIndex){
+	
+}
+
+void moveIntelTeleErratic(dungeon_t *d,struct event queue[],int nextEventIndex){
+	
+}
+
+void moveTunnelErratic(dungeon_t *d,struct event queue[],int nextEventIndex){
+	
+}
+
+
+void moveIntelTunnelErratic(dungeon_t *d,struct event queue[],int nextEventIndex){
+	
+}
+
+
+void moveTeleTunnelErratic(dungeon_t *d,struct event queue[],int nextEventIndex){
+	
+}
+
+void moveIntelTeleTunnelErratic(dungeon_t *d,struct event queue[],int nextEventIndex){
+	
+}
+
+void generateCharacteristics(struct event events[],dungeon_t *d){
+  int i,j;
+
+  for(i=0;i<DUNGEON_Y;i++){
+  	for(j=0;j<DUNGEON_X;j++){
+  		d->eventMap[i][j] = 0;
+  	}
+  }
+  d->eventMap[d->pc.position[dim_y]][d->pc.position[dim_x]] = 1;
+
+  srand(time(NULL));
+  // for(i = 0;i<150;i++){
+  // 	int asdf = (rand() % 10);
+  // 	printf("%d\n",asdf);
+  // }
+    for(i = 1;i < d->nummon;i++){
+       int intel = rand() % 2;
+       int telepath = rand() % 2;
+       int tunnel = rand() % 2;
+       int erratic = rand() % 2;
+       struct event genEvent;
+       int temp = 0;
+
+       if(intel){
+       	BIT_SET(temp,0);
+       }
+       if(telepath){
+       	BIT_SET(temp,1);
+       }
+       if(tunnel){
+       	BIT_SET(temp,2);
+       }
+       if(erratic){
+       	BIT_SET(temp,3);
+      }
+
+       genEvent.characteristic = temp;
+       genEvent.isPC = 0;  
+
+       int select = (rand() % d->num_rooms) + 1;
+   	   int height = d->rooms[select].size[dim_y];
+   	   int width = d->rooms[select].size[dim_x];
+   	   int randHeight = (rand() % (height + 1));
+   	   int randWidth = (rand() % (width + 1));
+
+   	   while(d->eventMap[randHeight][randWidth]==1){
+   	   		randHeight = (rand() % (height + 1));
+   	   		randWidth = (rand() % (width + 1));
+   	   }
+   	   genEvent.currentPosX = randWidth + d->rooms[select].position[dim_x];
+   	   genEvent.lastSeenX = -1;
+   	   genEvent.lastSeenY = -1;
+   	   genEvent.currentPosY = randHeight + d->rooms[select].position[dim_y];
+   	   genEvent.sequence = i;
+
+   	   
+   	   int speed = (rand() % 16) + 5;
+   	   genEvent.speed = speed;
+   	   int nextTurn = 1000 / speed;
+   	   genEvent.nextTurn = nextTurn;
+
+   	   d->eventMap[randHeight][randWidth] = 1;
+
+   	   switch(temp){
+   	   	case 0:
+   	   		genEvent.movePtr = &moveNothing;
+   	   		break;
+
+   	   	case 1:
+   	   		genEvent.movePtr = &moveIntel;
+   	   		break;
+
+   	   	case 2:
+   	   		genEvent.movePtr = &moveTele;
+   	   		break;
+
+   	   	case 3:
+   	   		genEvent.movePtr = &moveIntelTele;
+   	   		break;
+
+   	   	case 4:
+   	   		genEvent.movePtr = &moveTunnel;
+   	   		break;
+
+   	   	case 5:
+   	   		genEvent.movePtr = &moveIntelTunnel;
+   	   		break;
+
+   	   	case 6:
+   	   		genEvent.movePtr = &moveTeleTunnel;
+   	   		break;
+
+   	   	case 7:
+   	   		genEvent.movePtr = &moveIntelTeleTunnel;
+   	   		break;
+
+   	   	case 8:
+   	   		genEvent.movePtr = &moveErratic;
+   	   		break;
+
+   	   	case 9:
+   	   		genEvent.movePtr = &moveIntelErratic;
+   	   		break;
+
+   	   	case 10:
+   	   		genEvent.movePtr = &moveTeleErratic;
+   	   		break;
+
+   	   	case 11:
+   	   		genEvent.movePtr = &moveIntelTeleErratic;
+   	   		break;
+
+   	   	case 12:
+   	   		genEvent.movePtr = &moveTunnelErratic;
+   	   		break;
+
+   	   	case 13:
+   	   		genEvent.movePtr = &moveIntelTunnelErratic;
+   	   		break;
+
+   	   	case 14:
+   	   		genEvent.movePtr = &moveTeleTunnelErratic;
+   	   		break;
+
+   	   	case 15:
+   	   		genEvent.movePtr = &moveIntelTeleTunnelErratic;
+   	   		break;
+
+   	   	default:
+   	   		genEvent.movePtr = &moveNothing;
+   	   }
+
+   	   events[i] = genEvent;
+
+   }
+   struct event pcEvent;
+   pcEvent.currentPosX = d->pc.position[dim_x];
+   pcEvent.currentPosY = d->pc.position[dim_y];
+   pcEvent.speed = 10;
+   pcEvent.sequence = 0;
+   pcEvent.characteristic = 0;
+   pcEvent.lastSeenY = -1;
+   pcEvent.lastSeenX = -1;
+   pcEvent.isPC = 1;
+   pcEvent.nextTurn = 100;
+   pcEvent.movePtr = &movePC;
+   events[0] = pcEvent;
+   //(events[0].movePtr)(d,events);
+
+}
+
+
+
+void runSimulation(dungeon_t *d, struct event events[]){
+	int tick = 0;
+	while(tick!=1000){
+		int nextEventIndex = getNextEvent(d,events,tick);
+		if(nextEventIndex != -1){
+			struct event nextEvent = events[nextEventIndex];
+			(nextEvent.movePtr)(d,events,nextEventIndex);
+
+		}
+		tick++;
+	}
 }
 
 void usage(char *name)
@@ -1358,7 +1628,7 @@ int main(int argc, char *argv[])
 
   /* Default behavior: Seed with the time, generate a new dungeon, *
    * and don't write to disk.                                      */
-  do_load = do_save = do_image = do_pc = 0;
+  do_load = do_save = do_image = do_pc = do_nummon = 0;
   do_seed = 1;
   save_file = load_file = NULL;
 
@@ -1493,14 +1763,15 @@ int main(int argc, char *argv[])
   	calculateDistanceNonTunnel(&d);
   }else{
   	add_pc(&d,1);
-  	calculateDistance(&d);
-  	calculateDistanceNonTunnel(&d);
+  	//calculateDistance(&d);
+  	//calculateDistanceNonTunnel(&d);
   }
 
   render_dungeon(&d);
   if(do_nummon){
-  	struct event events[d.nummon];
-  	generateCharacteristics(events);
+  	struct event events[d.nummon + 1];
+  	generateCharacteristics(events,&d);
+  	runSimulation(&d,events);
 
 
   }

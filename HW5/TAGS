@@ -68,118 +68,145 @@ macros.h,611
 # define frand(173,7872
 # define structdup(180,7984
 
-rlg327.c,3303
-# define rand_under(16,338
-# define rand_range(20,481
-typedef struct corridor_path 22,555
-  heap_node_t *hn;hn23,586
-  uint8_t pos[pos24,605
-  uint8_t from[from25,623
-  int32_t cost;26,642
-} corridor_path_t;27,658
-typedef enum dim 29,678
-  dim_x,30,697
-  dim_y,31,706
-  num_dims32,715
-} dim_t;33,726
-typedef int16_t pair_t[pair_t38,763
-#define DUNGEON_X 40,798
-#define DUNGEON_Y 41,833
-#define MIN_ROOMS 42,868
-#define MAX_ROOMS 43,902
-#define ROOM_MIN_X 44,936
-#define ROOM_MIN_Y 45,969
-#define ROOM_MAX_X 46,1002
-#define ROOM_MAX_Y 47,1036
-#define SAVE_DIR 48,1070
-#define DUNGEON_SAVE_FILE 49,1111
-#define DUNGEON_SAVE_SEMANTIC 50,1152
-#define DUNGEON_SAVE_VERSION 51,1198
-#define INFINITY 52,1232
-#define UNDEFINED 53,1270
-#define mappair(55,1307
-#define mapxy(56,1364
-#define hardnesspair(57,1399
-#define hardnessxy(58,1466
-typedef enum __attribute__ ((__packed__)) terrain_type 60,1512
-  ter_debug,61,1569
-  ter_wall,62,1582
-  ter_wall_immutable,63,1594
-  ter_floor,64,1616
-  ter_floor_room,65,1629
-  ter_floor_hall,66,1647
-  ter_pc,67,1665
-} terrain_type_t;68,1675
-struct block 70,1694
-  int x;71,1709
-  int y;72,1718
-  int distance;73,1727
-  int visited;74,1743
-  int weight;75,1758
-  terrain_type_t type;76,1772
-typedef struct event 78,1798
-	int characteristic;79,1821
-	int lastSeenX;80,1842
-	int lastSeenY;81,1858
-	int currentPosX;82,1874
-	int currentPosY;83,1892
-	int speed;84,1910
-	int tick;85,1922
-}event_t;event_t86,1933
-typedef struct room 88,1944
-  pair_t position;89,1966
-  pair_t size;90,1985
-} room_t;91,2000
-typedef struct pc{pc95,2013
-	pair_t position;96,2032
-}pc_t;pc_t98,2051
-typedef struct dungeon 100,2059
-  uint32_t num_rooms;101,2084
-  room_t *rooms;rooms102,2106
-  terrain_type_t map[map103,2123
-  uint8_t hardness[hardness112,2776
-  pc_t pc;113,2818
-  int nummon;114,2829
-  uint32_t distance[distance115,2843
-} dungeon_t;116,2886
-static uint32_t in_room(118,2900
-static int32_t corridor_path_cmp(134,3291
-static void dijkstra_corridor(138,3441
-static void dijkstra_corridor_inv(237,7178
-#define hardnesspair_inv(290,8500
-static int connect_two_rooms(340,11137
-static int create_cycle(359,11789
-static int connect_rooms(401,13354
-int gaussian[gaussian414,13547
-typedef struct queue_node 422,13703
-  int x,423,13731
-  int x, y;423,13731
-  struct queue_node *next;next424,13743
-} queue_node_t;425,13770
-static int smooth_hardness(427,13787
-static int empty_dungeon(585,18063
-static int place_rooms(604,18439
-static int add_pc(668,20964
-static int make_rooms(678,21213
-int gen_dungeon(706,21975
-void render_dungeon(719,22100
-void delete_dungeon(750,22761
-void init_dungeon(755,22818
-int write_dungeon_map(761,22894
-int write_rooms(774,23123
-uint32_t calculate_dungeon_size(794,23542
-int makedirectory(801,23764
-int write_dungeon(836,24400
-int read_dungeon_map(895,25785
-int read_rooms(918,26383
-int calculate_num_rooms(948,27152
-int read_dungeon(956,27392
-int read_pgm(1030,29093
-void generateCharacteristics(1113,31218
-int weightForHardness(1117,31275
-struct block extractMin(1126,31551
-struct block extractMinNonTunnel(1144,31952
-void calculateDistance(1162,32436
-void calculateDistanceNonTunnel(1237,34303
-void usage(1313,36341
-int main(1323,36551
+rlg327.c,4161
+# define rand_under(17,356
+# define rand_range(21,499
+typedef struct corridor_path 23,573
+  heap_node_t *hn;hn24,604
+  uint8_t pos[pos25,623
+  uint8_t from[from26,641
+  int32_t cost;27,660
+} corridor_path_t;28,676
+typedef enum dim 30,696
+  dim_x,31,715
+  dim_y,32,724
+  num_dims33,733
+} dim_t;34,744
+typedef int16_t pair_t[pair_t39,781
+#define DUNGEON_X 41,816
+#define DUNGEON_Y 42,851
+#define MIN_ROOMS 43,886
+#define MAX_ROOMS 44,920
+#define ROOM_MIN_X 45,954
+#define ROOM_MIN_Y 46,987
+#define ROOM_MAX_X 47,1020
+#define ROOM_MAX_Y 48,1054
+#define SAVE_DIR 49,1088
+#define DUNGEON_SAVE_FILE 50,1129
+#define DUNGEON_SAVE_SEMANTIC 51,1170
+#define DUNGEON_SAVE_VERSION 52,1216
+#define INFINITY 53,1250
+#define UNDEFINED 54,1288
+#define BIT_SET(55,1322
+#define BIT_CLEAR(56,1361
+#define BIT_FLIP(57,1403
+#define BIT_CHECK(58,1443
+#define mappair(60,1486
+#define mapxy(61,1543
+#define hardnesspair(62,1578
+#define hardnessxy(63,1645
+typedef enum __attribute__ ((__packed__)) terrain_type 65,1691
+  ter_debug,66,1748
+  ter_wall,67,1761
+  ter_wall_immutable,68,1773
+  ter_floor,69,1795
+  ter_floor_room,70,1808
+  ter_floor_hall,71,1826
+  ter_pc,72,1844
+} terrain_type_t;73,1854
+struct block 75,1873
+  int x;76,1888
+  int y;77,1897
+  int distance;78,1906
+  int visited;79,1922
+  int weight;80,1937
+  terrain_type_t type;81,1951
+typedef struct room 85,1979
+  pair_t position;86,2001
+  pair_t size;87,2020
+} room_t;88,2035
+typedef struct pc{pc92,2048
+	pair_t position;93,2067
+}pc_t;pc_t95,2086
+typedef struct dungeon 97,2094
+  uint32_t num_rooms;98,2119
+  room_t *rooms;rooms99,2141
+  terrain_type_t map[map100,2158
+  uint8_t hardness[hardness109,2811
+  pc_t pc;110,2853
+  int nummon;111,2864
+  uint32_t distance[distance112,2878
+  int eventMap[eventMap113,2921
+} dungeon_t;114,2959
+typedef struct event 116,2973
+	int characteristic;117,2996
+	int lastSeenX;118,3017
+	int lastSeenY;119,3033
+	int currentPosX;120,3049
+	int currentPosY;121,3067
+	int speed;122,3085
+    int sequence;123,3097
+    int isPC;124,3115
+    int nextTurn;125,3129
+    void (*movePtr)movePtr126,3147
+}event_t;event_t128,3201
+static uint32_t in_room(130,3212
+static int32_t corridor_path_cmp(146,3603
+static void dijkstra_corridor(150,3753
+static void dijkstra_corridor_inv(249,7490
+#define hardnesspair_inv(302,8812
+static int connect_two_rooms(352,11449
+static int create_cycle(371,12101
+static int connect_rooms(413,13666
+int gaussian[gaussian426,13859
+typedef struct queue_node 434,14015
+  int x,435,14043
+  int x, y;435,14043
+  struct queue_node *next;next436,14055
+} queue_node_t;437,14082
+static int smooth_hardness(439,14099
+static int empty_dungeon(597,18375
+static int place_rooms(616,18751
+static int add_pc(680,21276
+static int make_rooms(690,21525
+int gen_dungeon(718,22287
+void render_dungeon(731,22412
+void delete_dungeon(762,23073
+void init_dungeon(767,23130
+int write_dungeon_map(773,23206
+int write_rooms(786,23435
+uint32_t calculate_dungeon_size(806,23854
+int makedirectory(813,24076
+int write_dungeon(848,24712
+int read_dungeon_map(907,26097
+int read_rooms(930,26695
+int calculate_num_rooms(960,27464
+int read_dungeon(968,27704
+int read_pgm(1042,29405
+int weightForHardness(1125,31530
+struct block extractMin(1134,31806
+struct block extractMinNonTunnel(1152,32207
+void calculateDistance(1170,32691
+void calculateDistanceNonTunnel(1245,34594
+int getNextEvent(1320,36673
+void moveNothing(1349,37278
+void movePC(1355,37390
+void moveIntel(1363,37565
+void moveTele(1368,37641
+void moveIntelTele(1372,37715
+void moveTunnel(1376,37794
+void moveIntelTunnel(1380,37870
+void moveTeleTunnel(1384,37951
+void moveIntelTeleTunnel(1388,38031
+void moveErratic(1392,38116
+void moveIntelErratic(1396,38193
+void moveTeleErratic(1400,38275
+void moveIntelTeleErratic(1404,38356
+void moveTunnelErratic(1408,38442
+void moveIntelTunnelErratic(1413,38526
+void moveTeleTunnelErratic(1418,38615
+void moveIntelTeleTunnelErratic(1422,38702
+void generateCharacteristics(1426,38794
+void runSimulation(1579,42289
+void usage(1592,42583
+int main(1602,42793
