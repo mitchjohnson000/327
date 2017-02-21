@@ -1466,15 +1466,15 @@ void moveNothing(dungeon_t *d,struct event queue[],int nextEventIndex){
 void movePC(dungeon_t *d,struct event queue[],int nextEventIndex){
 	//keep in same spot for now
 	render_dungeon(d);
-	calculateDistance(d);
-	calculateDistanceNonTunnel(d);
+	//calculateDistance(d);
+	//calculateDistanceNonTunnel(d);
 
 }
 
 void moveIntel(dungeon_t *d,struct event events[],int nextEventIndex){
-	if(inSameRoom(d,events[nextEventIndex],events[0])){
-		moveShortestPath(d,events,events[nextEventIndex],nextEventIndex,0);
-	}
+	// if(inSameRoom(d,events[nextEventIndex],events[0])){
+	// 	moveShortestPath(d,events,events[nextEventIndex],nextEventIndex,0);
+	// }
 
 	
 }
