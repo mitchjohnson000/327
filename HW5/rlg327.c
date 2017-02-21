@@ -1444,8 +1444,12 @@ int getNextEvent(dungeon_t * d,struct event events[],int tick){
 				mintick = currEvent.nextTurn;
 				foundNext = 1;
 				j = i;
-			}
-		}
+			}else{
+        events[i] = currEvent;
+      }
+		}else{
+      events[i] = currEvent;
+    }
 	}
 	if(foundNext){
 		temp.nextTurn = temp.nextTurn + (1000/temp.speed);
