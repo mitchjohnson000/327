@@ -1444,12 +1444,8 @@ int getNextEvent(dungeon_t * d,struct event events[],int tick){
 				mintick = currEvent.nextTurn;
 				foundNext = 1;
 				j = i;
-			}else{
-        events[i] = currEvent;
-      }
-		}else{
-      events[i] = currEvent;
-    }
+			}
+		}
 	}
 	if(foundNext){
 		temp.nextTurn = temp.nextTurn + (1000/temp.speed);
@@ -1702,7 +1698,7 @@ void runSimulation(dungeon_t *d, struct event events[]){
 	while(tick!=1000){
 		int nextEventIndex = getNextEvent(d,events,tick);
 		if(nextEventIndex != -1){
-			//struct event nextEvent = events[nextEventIndex];
+			struct event nextEvent = events[nextEventIndex];
 			//(nextEvent.movePtr)(d,events,nextEventIndex);
 
 		}
