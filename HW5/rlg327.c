@@ -1462,7 +1462,6 @@ void moveNothing(dungeon_t *d,struct event queue[],int nextEventIndex){
 
 }
 
-
 void movePC(dungeon_t *d,struct event queue[],int nextEventIndex){
 	//keep in same spot for now
 	render_dungeon(d);
@@ -1477,7 +1476,7 @@ void moveIntel(dungeon_t *d,struct event events[],int nextEventIndex){
 	// }
 
 	
-}
+} 
 
 void moveTele(dungeon_t *d,struct event queue[],int nextEventIndex){
 	
@@ -1699,8 +1698,8 @@ void runSimulation(dungeon_t *d, struct event events[]){
 	while(tick!=1000){
 		int nextEventIndex = getNextEvent(d,events,tick);
 		if(nextEventIndex != -1){
-			struct event nextEvent = events[nextEventIndex];
-			(nextEvent.movePtr)(d,events,nextEventIndex);
+			//struct event nextEvent = events[nextEventIndex];
+			//(nextEvent.movePtr)(d,events,nextEventIndex);
 
 		}
 		tick++;
