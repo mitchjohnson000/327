@@ -111,6 +111,8 @@ typedef struct dungeon {
   int nummon;
   uint32_t distance[DUNGEON_Y][DUNGEON_X];
   int eventMap[DUNGEON_Y][DUNGEON_X];
+  int distanceNonTunnel[DUNGEON_Y][DUNGEON_X];
+  int distanceTunnel[DUNGEON_Y][DUNGEON_X];
 } dungeon_t;
 
 typedef struct event {
@@ -123,6 +125,7 @@ typedef struct event {
     int sequence;
     int isPC;
     int nextTurn;
+    int isAlive;
     void (*movePtr)(dungeon_t *,struct event *,int);
 
 }event_t;
@@ -734,6 +737,7 @@ void render_dungeon(dungeon_t *d)
 
   for (p[dim_y] = 0; p[dim_y] < DUNGEON_Y; p[dim_y]++) {
     for (p[dim_x] = 0; p[dim_x] < DUNGEON_X; p[dim_x]++) {
+  if(d->eventMap[p[dim_y]][p[dim_x]] == -1 || d->eventMap[p[dim_y]][p[dim_x]] == 69){
       switch (mappair(p)) {
       case ter_wall:
       case ter_wall_immutable:
@@ -753,7 +757,10 @@ void render_dungeon(dungeon_t *d)
         putchar('*');
         fprintf(stderr, "Debug character at %d, %d\n", p[dim_y], p[dim_x]);
         break;
-      }
+      		}
+  		}else{
+  			putchar('M');
+  		}
     }
     putchar('\n');
   }
@@ -1227,18 +1234,20 @@ void calculateDistance(dungeon_t *d){
    		}
 	}
 }
-// for(i = 1;i<DUNGEON_Y-1;i++){
-// 	printf("\n");
-// 	for(j = 1;j<DUNGEON_X-1;j++){
-// 		if(queue[i][j].type == ter_pc){
-// 			printf("%c",'@');
-// 		}else{
-// 			printf("%d",(queue[i][j].distance % 10));
-// 		}
-// 	}
-// }
-// printf("\n");
-// printf("\n");
+for(i = 1;i<DUNGEON_Y-1;i++){
+	printf("\n");
+	for(j = 1;j<DUNGEON_X-1;j++){
+		if(queue[i][j].type == ter_pc){
+			//printf("%c",'@');
+			d->distanceTunnel[i][j] = -1;
+		}else{
+			d->distanceTunnel[i][j] = queue[i][j].distance;
+			//printf("%d",(queue[i][j].distance % 10));
+		}
+	}
+}
+printf("\n");
+printf("\n");
 free(count);
 }
 
@@ -1301,22 +1310,57 @@ void calculateDistanceNonTunnel(dungeon_t *d){
    		}
 	}
 }
-// for(i = 1;i<DUNGEON_Y-1;i++){
-// 	printf("\n");
-// 	for(j = 1;j<DUNGEON_X-1;j++){
-// 		if(queue[i][j].type == ter_wall ||queue[i][j].type == ter_wall_immutable){
-// 			printf("%c",' ');
-// 		}else if(queue[i][j].type == ter_pc){
-// 			printf("%c",'@');
-// 		}else{
-// 			printf("%d",(queue[i][j].distance % 10));
+for(i = 1;i<DUNGEON_Y-1;i++){
+	//printf("\n");
+	for(j = 1;j<DUNGEON_X-1;j++){
+		if(queue[i][j].type == ter_wall ||queue[i][j].type == ter_wall_immutable){
+			d->distanceNonTunnel[i][j] = -2;
+			//printf("%c",' ');
+		}else if(queue[i][j].type == ter_pc){
+			d->distanceNonTunnel[i][j] = -1;
+			//printf("%c",'@');
+		}else{
+			d->distanceNonTunnel[i][j] = queue[i][j].distance;
+			//printf("%d",(queue[i][j].distance % 10));
+		}
+	}
+}
+printf("\n");
+printf("\n");
+free(count);
+}
+
+// void printDungeon(dungeon_t *d){
+// 	int i,j;
+// 	for(i = 0;i < DUNGEON_Y;i++){
+// 		for(j = 0; j < DUNGEON_X;j++){
+// 			if(d->eventMap[i][j] == -1){
+// 				switch (mappair(p)) {
+//       			case ter_wall:
+//      	 		case ter_wall_immutable:
+//         		putchar(' ');
+//        			break;
+//      			case ter_floor:
+//       			case ter_pc:
+//       			putchar('@');
+//       			break;
+//       			case ter_floor_room:
+//       			putchar('.');
+//       			break;
+//      			case ter_floor_hall:
+//         		putchar('#');
+//         		break;
+//       			case ter_debug:
+//       			putchar('*');
+//         		fprintf(stderr, "Debug character at %d, %d\n", p[dim_y], p[dim_x]);
+//         		break;
+//      			 }
+// 				printf("%s\n", );
+// 			}
 // 		}
 // 	}
 // }
-// printf("\n");
-// printf("\n");
-free(count);
-}
+
 int inSameRoom(dungeon_t *d,struct event NPC, struct event PC){
 	int x = NPC.currentPosX;
 	int y = NPC.currentPosY;
@@ -1325,12 +1369,64 @@ int inSameRoom(dungeon_t *d,struct event NPC, struct event PC){
 		struct room currRoom = d->rooms[i];
 		if((x > currRoom.position[dim_x] && x < currRoom.position[dim_x] + currRoom.size[dim_x]) && (y > currRoom.position[dim_y] && y < currRoom.position[dim_y] + currRoom.size[dim_y])){
 			//the NPC is in currRoom
-			if((x > currRoom.position[dim_x] && x < currRoom.position[dim_x] + currRoom.size[dim_x]) && (y > currRoom.position[dim_y] && y < currRoom.position[dim_y] + currRoom.size[dim_y])){
-				
+			if((PC.currentPosX > currRoom.position[dim_x] && PC.currentPosX < currRoom.position[dim_x] + currRoom.size[dim_x]) && (PC.currentPosY > currRoom.position[dim_y] && PC.currentPosY < currRoom.position[dim_y] + currRoom.size[dim_y])){
+				//the PC is in currRoom
+				return 1;
 			}
 
 		}
 	}
+
+	return 0;
+}
+
+int moveShortestPath(dungeon_t *d,struct event events[], struct event currEvent,int nextEventIndex,int isTunnel){
+	if(isTunnel){
+		return 0;
+
+	}else{
+		int i,j;
+		int minX,minY;
+		int min = 1000000;
+		for(i = currEvent.currentPosX - 1;i < currEvent.currentPosX + 1;i++){
+			for(j = currEvent.currentPosY - 1;j < currEvent.currentPosY + 1;j++){
+				if(!(d->map[j][i] == ter_wall || d->map[j][i] == ter_wall_immutable)){
+					if(d->distanceNonTunnel[j][i] < min){
+						min = d->distanceNonTunnel[j][i];
+						minX = i;
+						minY = j;
+					}
+				}
+			}
+		}
+	    
+	    for(i = 0;i < d->nummon;i++){
+	    	if(events[i].currentPosX == minX && events[i].currentPosY == minY && events[i].isAlive){
+	    		if(events[i].isPC){
+	    			//game over
+	    			printf("%s\n","GAME OVER");
+	    			exit(1);
+	    		}else{
+	    			d->eventMap[minY][minX] = -1;
+	    			d->eventMap[events[i].currentPosY][events[i].currentPosX] = -1;
+	    			events[i].isAlive = 0;
+	    			currEvent.isAlive = 0;
+	    			events[nextEventIndex] = currEvent;
+	    			return 0;
+	    		}
+	    	}
+	    }
+	    d->eventMap[currEvent.currentPosY][currEvent.currentPosX] = -1;
+
+	    currEvent.currentPosX = minX;
+	    currEvent.currentPosY = minY;
+	    d->eventMap[currEvent.currentPosY][currEvent.currentPosX] = currEvent.characteristic;
+	    events[nextEventIndex] = currEvent;
+	    return 1;
+
+	}
+
+
 }
 int getNextEvent(dungeon_t * d,struct event events[],int tick){
 	int i,j;
@@ -1340,7 +1436,7 @@ int getNextEvent(dungeon_t * d,struct event events[],int tick){
 	struct event temp;
 	for(i = 0;i < d->nummon + 1;i++){
 		struct event currEvent = events[i];
-		if(tick >= currEvent.nextTurn){
+		if(tick >= currEvent.nextTurn && currEvent.isAlive){
 			temp = currEvent;
 			if(min > currEvent.sequence && mintick > currEvent.nextTurn){
 				temp = currEvent;
@@ -1369,13 +1465,16 @@ void moveNothing(dungeon_t *d,struct event queue[],int nextEventIndex){
 
 void movePC(dungeon_t *d,struct event queue[],int nextEventIndex){
 	//keep in same spot for now
-	render_dungeon(d);
+	//render_dungeon(d);
 	calculateDistance(d);
 	calculateDistanceNonTunnel(d);
 
 }
 
-void moveIntel(dungeon_t *d,struct event queue[],int nextEventIndex){
+void moveIntel(dungeon_t *d,struct event events[],int nextEventIndex){
+	if(inSameRoom(d,events[nextEventIndex],events[0])){
+		moveShortestPath(d,events,events[nextEventIndex],nextEventIndex,0);
+	}
 
 	
 }
@@ -1443,10 +1542,10 @@ void generateCharacteristics(struct event events[],dungeon_t *d){
 
   for(i=0;i<DUNGEON_Y;i++){
   	for(j=0;j<DUNGEON_X;j++){
-  		d->eventMap[i][j] = 0;
+  		d->eventMap[i][j] = -1;
   	}
   }
-  d->eventMap[d->pc.position[dim_y]][d->pc.position[dim_x]] = 1;
+  d->eventMap[d->pc.position[dim_y]][d->pc.position[dim_x]] = 69;
 
   srand(time(NULL));
   // for(i = 0;i<150;i++){
@@ -1477,19 +1576,22 @@ void generateCharacteristics(struct event events[],dungeon_t *d){
        genEvent.characteristic = temp;
        genEvent.isPC = 0;  
 
-       int select = (rand() % d->num_rooms) + 1;
+       int select = (rand() % d->num_rooms - 1) + 1;
+       printf("%d\n",d->num_rooms);
+       printf("%d\n",select);
    	   int height = d->rooms[select].size[dim_y];
    	   int width = d->rooms[select].size[dim_x];
-   	   int randHeight = (rand() % (height + 1));
-   	   int randWidth = (rand() % (width + 1));
+   	   int randHeight = rand() % height;
+   	   int randWidth = rand() % width;
 
-   	   while(d->eventMap[randHeight][randWidth]==1){
-   	   		randHeight = (rand() % (height + 1));
-   	   		randWidth = (rand() % (width + 1));
+   	   while(d->eventMap[randHeight][randWidth]!= -1){
+   	   		randHeight = rand() % height;
+   	   		randWidth = rand() % width;
    	   }
    	   genEvent.currentPosX = randWidth + d->rooms[select].position[dim_x];
    	   genEvent.lastSeenX = -1;
    	   genEvent.lastSeenY = -1;
+   	   genEvent.isAlive = 1;
    	   genEvent.currentPosY = randHeight + d->rooms[select].position[dim_y];
    	   genEvent.sequence = i;
 
@@ -1499,7 +1601,7 @@ void generateCharacteristics(struct event events[],dungeon_t *d){
    	   int nextTurn = 1000 / speed;
    	   genEvent.nextTurn = nextTurn;
 
-   	   d->eventMap[randHeight][randWidth] = 1;
+   	   d->eventMap[genEvent.currentPosY][genEvent.currentPosX] = genEvent.characteristic;
 
    	   switch(temp){
    	   	case 0:
@@ -1582,6 +1684,7 @@ void generateCharacteristics(struct event events[],dungeon_t *d){
    pcEvent.lastSeenY = -1;
    pcEvent.lastSeenX = -1;
    pcEvent.isPC = 1;
+   pcEvent.isAlive = 1;
    pcEvent.nextTurn = 100;
    pcEvent.movePtr = &movePC;
    events[0] = pcEvent;
@@ -1766,15 +1869,13 @@ int main(int argc, char *argv[])
   	//calculateDistance(&d);
   	//calculateDistanceNonTunnel(&d);
   }
-
-  render_dungeon(&d);
   if(do_nummon){
   	struct event events[d.nummon + 1];
   	generateCharacteristics(events,&d);
-  	runSimulation(&d,events);
-
-
+  	//runSimulation(&d,events);
   }
+  render_dungeon(&d);
+
 
   if (do_save) {
     write_dungeon(&d, save_file);
