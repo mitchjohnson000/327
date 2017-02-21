@@ -1465,7 +1465,7 @@ void moveNothing(dungeon_t *d,struct event queue[],int nextEventIndex){
 
 void movePC(dungeon_t *d,struct event queue[],int nextEventIndex){
 	//keep in same spot for now
-	//render_dungeon(d);
+	render_dungeon(d);
 	calculateDistance(d);
 	calculateDistanceNonTunnel(d);
 
