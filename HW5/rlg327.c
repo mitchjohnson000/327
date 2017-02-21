@@ -1866,13 +1866,13 @@ int main(int argc, char *argv[])
   	calculateDistanceNonTunnel(&d);
   }else{
   	add_pc(&d,1);
-  	//calculateDistance(&d);
-  	//calculateDistanceNonTunnel(&d);
+  	calculateDistance(&d);
+  	calculateDistanceNonTunnel(&d);
   }
   if(do_nummon){
   	struct event events[d.nummon + 1];
   	generateCharacteristics(events,&d);
-  	//runSimulation(&d,events);
+  	runSimulation(&d,events);
   }
   render_dungeon(&d);
 
