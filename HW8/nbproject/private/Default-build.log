@@ -1,0 +1,7 @@
+Compiling rlg327.c
+rlg327.c: In function ‘main’:
+rlg327.c:239:3: error: format not a string literal and no format arguments [-Werror=format-security]
+   printf(pc_is_alive(&d) ? victory : tombstone);
+   ^
+cc1: all warnings being treated as errors
+make: *** [rlg327.o] Error 1

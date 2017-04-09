@@ -1,0 +1,13 @@
+called: g++
+	/home/mdj/327/HW9
+	g++
+	-Wall
+	-Werror
+	-ggdb
+	-funroll-loops
+	-MMD
+	-MF
+	rlg327.d
+	-c
+	rlg327.cpp
+

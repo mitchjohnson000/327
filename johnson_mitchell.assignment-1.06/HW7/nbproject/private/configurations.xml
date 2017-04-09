@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configurationDescriptor version="100">
+  <logicalFolder name="root" displayName="root" projectFiles="true" kind="ROOT">
+    <df root="." name="0">
+      <df name="images">
+      </df>
+      <df name="test_dungeons">
+      </df>
+      <in>Test.cpp</in>
+      <in>character-cpp.h</in>
+      <in>character.c</in>
+      <in>character.cpp</in>
+      <in>character.h</in>
+      <in>dims.h</in>
+      <in>dungeon.c</in>
+      <in>dungeon.h</in>
+      <in>event.c</in>
+      <in>event.h</in>
+      <in>heap.c</in>
+      <in>heap.h</in>
+      <in>io.c</in>
+      <in>io.h</in>
+      <in>macros.h</in>
+      <in>move.c</in>
+      <in>move.h</in>
+      <in>npc-cpp.h</in>
+      <in>npc.c</in>
+      <in>npc.cpp</in>
+      <in>npc.h</in>
+      <in>path.c</in>
+      <in>path.h</in>
+      <in>pc-cpp.h</in>
+      <in>pc.c</in>
+      <in>pc.cpp</in>
+      <in>pc.h</in>
+      <in>rlg327.c</in>
+      <in>test_header.h</in>
+      <in>utils.c</in>
+      <in>utils.h</in>
+    </df>
+    <itemPath>npc-cpp.=</itemPath>
+  </logicalFolder>
+  <projectmakefile>Makefile</projectmakefile>
+  <confs>
+    <conf name="Default" type="0">
+      <toolsSet>
+        <developmentServer>localhost</developmentServer>
+        <platform>2</platform>
+      </toolsSet>
+      <compile>
+        <compiledirpicklist>
+          <compiledirpicklistitem>.</compiledirpicklistitem>
+          <compiledirpicklistitem>${AUTO_FOLDER}</compiledirpicklistitem>
+        </compiledirpicklist>
+        <compiledir>${AUTO_FOLDER}</compiledir>
+        <compilecommandpicklist>
+          <compilecommandpicklistitem>${MAKE} ${ITEM_NAME}.o</compilecommandpicklistitem>
+          <compilecommandpicklistitem>${AUTO_COMPILE}</compilecommandpicklistitem>
+        </compilecommandpicklist>
+        <compilecommand>${AUTO_COMPILE}</compilecommand>
+      </compile>
+      <dbx_gdbdebugger version="1">
+        <gdb_pathmaps>
+        </gdb_pathmaps>
+        <gdb_interceptlist>
+          <gdbinterceptoptions gdb_all="false" gdb_unhandled="true" gdb_unexpected="true"/>
+        </gdb_interceptlist>
+        <gdb_options>
+          <DebugOptions>
+          </DebugOptions>
+        </gdb_options>
+        <gdb_buildfirst gdb_buildfirst_overriden="false" gdb_buildfirst_old="false"/>
+      </dbx_gdbdebugger>
+      <nativedebugger version="1">
+        <engine>gdb</engine>
+      </nativedebugger>
+      <runprofile version="9">
+        <runcommandpicklist>
+          <runcommandpicklistitem>"${OUTPUT_PATH}"</runcommandpicklistitem>
+        </runcommandpicklist>
+        <runcommand>"${OUTPUT_PATH}"</runcommand>
+        <rundir>.</rundir>
+        <buildfirst>false</buildfirst>
+        <terminal-type>0</terminal-type>
+        <remove-instrumentation>0</remove-instrumentation>
+        <environment>
+        </environment>
+      </runprofile>
+    </conf>
+  </confs>
+</configurationDescriptor>

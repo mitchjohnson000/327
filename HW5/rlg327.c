@@ -1462,22 +1462,21 @@ void moveNothing(dungeon_t *d,struct event queue[],int nextEventIndex){
 
 }
 
-
 void movePC(dungeon_t *d,struct event queue[],int nextEventIndex){
 	//keep in same spot for now
-	//render_dungeon(d);
-	calculateDistance(d);
-	calculateDistanceNonTunnel(d);
+	render_dungeon(d);
+	//calculateDistance(d);
+	//calculateDistanceNonTunnel(d);
 
 }
 
 void moveIntel(dungeon_t *d,struct event events[],int nextEventIndex){
-	if(inSameRoom(d,events[nextEventIndex],events[0])){
-		moveShortestPath(d,events,events[nextEventIndex],nextEventIndex,0);
-	}
+	// if(inSameRoom(d,events[nextEventIndex],events[0])){
+	// 	moveShortestPath(d,events,events[nextEventIndex],nextEventIndex,0);
+	// }
 
 	
-}
+} 
 
 void moveTele(dungeon_t *d,struct event queue[],int nextEventIndex){
 	
@@ -1700,7 +1699,7 @@ void runSimulation(dungeon_t *d, struct event events[]){
 		int nextEventIndex = getNextEvent(d,events,tick);
 		if(nextEventIndex != -1){
 			struct event nextEvent = events[nextEventIndex];
-			(nextEvent.movePtr)(d,events,nextEventIndex);
+			//(nextEvent.movePtr)(d,events,nextEventIndex);
 
 		}
 		tick++;
@@ -1866,13 +1865,13 @@ int main(int argc, char *argv[])
   	calculateDistanceNonTunnel(&d);
   }else{
   	add_pc(&d,1);
-  	//calculateDistance(&d);
-  	//calculateDistanceNonTunnel(&d);
+  	calculateDistance(&d);
+  	calculateDistanceNonTunnel(&d);
   }
   if(do_nummon){
   	struct event events[d.nummon + 1];
   	generateCharacteristics(events,&d);
-  	//runSimulation(&d,events);
+  	runSimulation(&d,events);
   }
   render_dungeon(&d);
 

@@ -1,0 +1,13 @@
+called: gcc
+	/home/mdj/327/HW8
+	gcc
+	-Wall
+	-Werror
+	-ggdb
+	-funroll-loops
+	-MMD
+	-MF
+	rlg327.d
+	-c
+	rlg327.c
+
