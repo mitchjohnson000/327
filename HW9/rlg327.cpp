@@ -224,7 +224,7 @@ int main(int argc, char *argv[])
   }
 
   config_pc(&d);
-  parse_descriptions(&d);
+  if(parse_descriptions(&d)){ return 1;}
 
   gen_monsters(&d);
   
