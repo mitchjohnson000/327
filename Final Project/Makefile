@@ -7,7 +7,7 @@ CFLAGS = -Wall -Werror -ggdb -funroll-loops
 CXXFLAGS = -Wall -ggdb -funroll-loops
 LDFLAGS = -lcurl -ljsoncpp
 
-BIN = rlg327
+BIN = classchecker
 OBJS = final_project.o class_data.o
 
 all: $(BIN) etags

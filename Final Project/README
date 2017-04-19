@@ -8,6 +8,8 @@ Once you have these two libraries you can run my program.
 
 What my program does it takes in 5 arguments, year, semestercode, dept code, class number and section ID of a certain class at ISU, the final arugment is your email address. It will continuatously check the class information checking for open seats in the class, once it finds an open seat, it will email you. If it doesn't find any open seats it will continue to request the site until it eventually finds an open seat. I have used a similiar program in the past and I can confirm that it works well. 
 
-use "./rlg327 2017 F "COM S" 227 " A" <YOUR_EMAIL_ADDRESS>" as a test. This class has over 100 seats open and will immediately email you.
+use "./classchecker 2017 F "COM S" 227 " A" <YOUR_EMAIL_ADDRESS>" as a test. This class has over 100 seats open and will immediately email you.
 
-use "./rlg327 2017 F "COM S" 311 " 1" <YOUR_EMAIL_ADDRESS>" as another test. This class has no open seats right now and the program will continue to run until it eventually finds an open seat.
+use "./classchecker 2017 F "COM S" 311 " 1" <YOUR_EMAIL_ADDRESS>" as another test. This class has no open seats right now and the program will continue to run until it eventually finds an open seat.
+
+My github has the project on it as well at https://github.com/mitchjohnson000/327/tree/master/Final%20Project
