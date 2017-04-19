@@ -5,7 +5,7 @@ RM = rm -f
 
 CFLAGS = -Wall -Werror -ggdb -funroll-loops
 CXXFLAGS = -Wall -ggdb -funroll-loops
-LDFLAGS = -lcurl -ljsoncpp -lPocoNet -lPocoFoundation
+LDFLAGS = -lcurl -ljsoncpp
 
 BIN = rlg327
 OBJS = final_project.o class_data.o

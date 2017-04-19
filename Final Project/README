@@ -1,0 +1,13 @@
+You will need a few libraries to use this program. 
+
+First one is a library called JSONCPP, from https://github.com/open-source-parsers/jsoncpp
+
+Second is CURL, which is a common C++ library that can be downloaded from most package managers.
+
+Once you have these two libraries you can run my program.
+
+What my program does it takes in 5 arguments, year, semestercode, dept code, class number and section ID of a certain class at ISU, the final arugment is your email address. It will continuatously check the class information checking for open seats in the class, once it finds an open seat, it will email you. If it doesn't find any open seats it will continue to request the site until it eventually finds an open seat. I have used a similiar program in the past and I can confirm that it works well. 
+
+use "./rlg327 2017 F "COM S" 227 " A" <YOUR_EMAIL_ADDRESS>" as a test. This class has over 100 seats open and will immediately email you.
+
+use "./rlg327 2017 F "COM S" 311 " 1" <YOUR_EMAIL_ADDRESS>" as another test. This class has no open seats right now and the program will continue to run until it eventually finds an open seat.

@@ -1,72 +1,129 @@
-#include "curl/curl.h"
 #include <stdio.h>
 #include <string.h>
 #include <iostream>
 #include <stdlib.h>
-#include "class_data.h"
 #include <jsoncpp/json/json.h>
-#include <Poco/Net/MailMessage.h>
-#include <Poco/Net/MailRecipient.h>
-#include <Poco/Net/SecureStreamSocket.h>
-#include <Poco/Net/SMTPClientSession.h>
-#include <Poco/Net/NetException.h>
-#include <Poco/Net/Context.h>
-#include <Poco/Net/SSLManager.h>
-#include <Poco/Net/AcceptCertificateHandler.h>
-#include <Poco/AutoPtr.h>
+#include <sstream>
+#include <unistd.h>
 
+#include "class_data.h"
+#include "curl/curl.h"
 
-using namespace std;
-using namespace Poco::Net;
-using namespace Poco;
+#define FROM    "<mitchjohnson000@gmail.com>"
+#define CC      "<theoraclejohnson98@gmail.com>"
+ 
+ const char **payload_text = (const char **)malloc(sizeof(char *) * 3);
 
-int sendEmail(char * destination)
+ 
+struct upload_status {
+  int lines_read;
+};
+ 
+static size_t payload_source(void *ptr, size_t size, size_t nmemb, void *userp)
 {
-    string host = "smtp.gmail.com";
-    UInt16 port = 465;
-    string user = "username@gmail.com";
-    string password = "password";
-    string to = "username@gmail.com";
-    string from = "username@gmail.com";
-    string subject = "Your first e-mail message sent using Poco Libraries";
-    subject = MailMessage::encodeWord(subject, "UTF-8");
-    string content = "Well done! You've successfully sent your first message using Poco SMTPClientSession";
-
-    MailMessage message;
-    message.setSender(from);
-    message.addRecipient(MailRecipient(MailRecipient::PRIMARY_RECIPIENT, to));
-    message.setSubject(subject);
-    message.setContentType("text/plain; charset=UTF-8");
-    message.setContent(content, MailMessage::ENCODING_8BIT);
-            SharedPtr<InvalidCertificateHandler> ptrHandler = new AcceptCertificateHandler(false);
-
-
-    try {
-      //  Poco::Crypto::OpenSSLInitializer::initialize();
-        Context::Ptr ptrContext = new Context(Context::CLIENT_USE, "", "", "", Context::VERIFY_RELAXED, 9, true, "ALL:!ADH:!LOW:!EXP:!MD5:@STRENGTH");
-        SSLManager::instance().initializeClient(0, ptrHandler, ptrContext);
-
-        SocketAddress sa(host, port);
-        SecureStreamSocket socket(sa);
-        SMTPClientSession session(socket);
-
-        try {
-            session.login(SMTPClientSession::AUTH_LOGIN, user, password);
-            session.sendMessage(message);
-            cout << "Message successfully sent" << endl;
-            session.close();
-           // Poco::Crypto::OpenSSLInitializer::uninitialize();
-        } catch (SMTPException &e) {
-            cerr << e.displayText() << endl;
-            session.close();
-            //Poco::Crypto::OpenSSLInitializer::uninitialize();
-            return 0;
-        }
-    } catch (NetException &e) {
-        cerr << e.displayText() << endl;
-        return 0;
-    }
+  struct upload_status *upload_ctx = (struct upload_status *)userp;
+  const char *data;
+ 
+  if((size == 0) || (nmemb == 0) || ((size*nmemb) < 1)) {
     return 0;
+  }
+ 
+  data = payload_text[upload_ctx->lines_read];
+ 
+  if(data) {
+    size_t len = strlen(data);
+    memcpy(ptr, data, len);
+    upload_ctx->lines_read++;
+ 
+    return len;
+  }
+ 
+  return 0;
+}
+ 
+int sendEmail(CURL * cu,char * destination)
+{
+ // CURL *cu;
+  CURLcode res = CURLE_OK;
+  struct curl_slist *recipients = NULL;
+  struct upload_status upload_ctx;
+ 
+  upload_ctx.lines_read = 0;
+ 
+  //cu = curl_easy_init();
+  if(cu) {
+    /* Set username and password */ 
+    curl_easy_setopt(cu, CURLOPT_USERNAME, "mitchjohnson000");
+    curl_easy_setopt(cu, CURLOPT_PASSWORD, "Johnsmit000!");
+ 
+    /* This is the URL for your mailserver. Note the use of smtps:// rather
+     * than smtp:// to request a SSL based connection. */ 
+    curl_easy_setopt(cu, CURLOPT_URL, "smtps://smtp.gmail.com");
+ 
+    /* If you want to connect to a site who isn't using a certificate that is
+     * signed by one of the certs in the CA bundle you have, you can skip the
+     * verification of the server's certificate. This makes the connection
+     * A LOT LESS SECURE.
+     *
+     * If you have a CA cert for the server stored someplace else than in the
+     * default bundle, then the CURLOPT_CAPATH option might come handy for
+     * you. */ 
+#ifdef SKIP_PEER_VERIFICATION
+    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
+#endif
+ 
+    /* If the site you're connecting to uses a different host name that what
+     * they have mentioned in their server certificate's commonName (or
+     * subjectAltName) fields, libcurl will refuse to connect. You can skip
+     * this check, but this will make the connection less secure. */ 
+#ifdef SKIP_HOSTNAME_VERIFICATION
+    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 0L);
+#endif
+ 
+    /* Note that this option isn't strictly required, omitting it will result
+     * in libcurl sending the MAIL FROM command with empty sender data. All
+     * autoresponses should have an empty reverse-path, and should be directed
+     * to the address in the reverse-path which triggered them. Otherwise,
+     * they could cause an endless loop. See RFC 5321 Section 4.5.5 for more
+     * details.
+     */ 
+    curl_easy_setopt(cu, CURLOPT_MAIL_FROM, FROM);
+ 
+    /* Add two recipients, in this particular case they correspond to the
+     * To: and Cc: addressees in the header, but they could be any kind of
+     * recipient. */ 
+    recipients = curl_slist_append(recipients, destination);
+    recipients = curl_slist_append(recipients, CC);
+    curl_easy_setopt(cu, CURLOPT_MAIL_RCPT, recipients);
+ 
+    /* We're using a callback function to specify the payload (the headers and
+     * body of the message). You could just use the CURLOPT_READDATA option to
+     * specify a FILE pointer to read from. */ 
+    curl_easy_setopt(cu, CURLOPT_READFUNCTION, payload_source);
+    curl_easy_setopt(cu, CURLOPT_READDATA, &upload_ctx);
+    curl_easy_setopt(cu, CURLOPT_UPLOAD, 1L);
+ 
+    /* Since the traffic will be encrypted, it is very useful to turn on debug
+     * information within libcurl to see what is happening during the
+     * transfer */ 
+    curl_easy_setopt(cu, CURLOPT_VERBOSE, 1L);
+ 
+    /* Send the message */ 
+    res = curl_easy_perform(cu);
+ 
+    /* Check for errors */ 
+    if(res != CURLE_OK)
+      fprintf(stderr, "curl_easy_perform() failed: %s\n",
+              curl_easy_strerror(res));
+ 
+    /* Free the list of recipients */ 
+    curl_slist_free_all(recipients);
+ 
+    /* Always cleanup */ 
+   // curl_easy_cleanup(cu);
+  }
+ 
+  return (int)res;
 }
 
 struct BufferStruct
@@ -85,30 +142,72 @@ static size_t WriteMemoryCallback(void *ptr, size_t size, size_t nmemb, void *da
 return realsize;
 }
 
-int main(int argc, char *argv[]){
+class_data * requestClassData(CURL * hnd,std::string year,std::string semcode,std::string deptcode,std::string class_number,std::string section_id){
     std::string rawData;
-    class_data * data; 
-   CURL *hnd = curl_easy_init();
-   
-
+    class_data * data;
+    
     curl_easy_setopt(hnd, CURLOPT_CUSTOMREQUEST, "POST");
     curl_easy_setopt(hnd, CURLOPT_URL, "http://classes.iastate.edu/app/rest/mystate");
-
 
     struct curl_slist *headers = NULL;
     headers = curl_slist_append(headers, "cache-control: no-cache");
     headers = curl_slist_append(headers, "content-type: application/json");
     curl_easy_setopt(hnd, CURLOPT_HTTPHEADER, headers);
 
-    curl_easy_setopt(hnd, CURLOPT_POSTFIELDS, "{\"courseSectionRequests\": [{\"semesterCode\": \"F\",\"semesterYear\": \"2017\",\"departmentCode\": \"COM S\",\"classNumber\": \"311\",\"sectionId\": \" 1\"}]}");
+    Json::Value root;
+    Json::Value array;
+    Json::Value object;
+    object["semesterCode"] = semcode;
+    object["semesterYear"] = year;
+    object["departmentCode"] =deptcode;
+    object["classNumber"] = class_number;
+    object["sectionId"] = section_id;
+    array[0] = object;
+    root["courseSectionRequests"] = array;
+    
+    Json::FastWriter fastWriter;
+    std::string jsonMessage = fastWriter.write(root);
+    const char * t = jsonMessage.c_str();
+    curl_easy_setopt(hnd, CURLOPT_POSTFIELDS,t);
 
     curl_easy_setopt(hnd, CURLOPT_WRITEFUNCTION, WriteMemoryCallback);
     curl_easy_setopt(hnd, CURLOPT_WRITEDATA,&rawData);
     CURLcode ret = curl_easy_perform(hnd);
 
     data = new class_data(rawData);
-    char * temp = "asdfs";
-    sendEmail(temp);
-   
-    curl_easy_cleanup(hnd);
+    printf("Number of Seats Currently Open %d",data->getNumOpenSeats());
+
+    return data;
+}
+
+int main(int argc, char *argv[]){
+    class_data * data;
+    CURL * curl = curl_easy_init();
+      
+           
+    while(true){
+        data = requestClassData(curl,argv[1],argv[2],argv[3],argv[4],argv[5]);
+        if(data->getNumOpenSeats() != 0){
+                std::string subject = "Subject: " + data->getClassName() + ": Your class has seats avaliable \r";
+                std::ostringstream s;
+                int i = data->getNumOpenSeats();
+                s << i;
+                std::string body = "Your class only has " + s.str() +  " seats avaliable. Log on to AccessPlus ASAP\r";
+                char * blank = "\r\n";
+                payload_text[0] = (char *)malloc((sizeof(char) * subject.length()));
+                payload_text[1] = (char *)malloc((sizeof(char) * strlen(blank)));
+                payload_text[2] = (char *)malloc((sizeof(char) * body.length()));
+                payload_text[3] = NULL;
+
+                payload_text[0]= subject.c_str(); 
+                payload_text[1] = blank;
+                payload_text[2] = body.c_str();
+                free(data);
+                sendEmail(curl,argv[6]);
+                break;
+        }
+        free(data);
+        usleep(5000000);
+    }
+    curl_easy_cleanup(curl);
 }
